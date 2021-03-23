@@ -5,7 +5,10 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "user01": "node index.js --username raphacapeto --room sala01 --hostUri http://localhost.com:9898",
+    "user02": "node index.js --username maria_c --room sala01 --hostUri http://localhost.com:9898",
+    "user03": "node index.js --username jennifer01 --room sala01 --hostUri http://localhost.com:9898"
   },
   "dependencies": {
     "blessed": "^0.1.81"

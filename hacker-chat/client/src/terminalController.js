@@ -81,14 +81,5 @@ export class TerminalController {
       this.#registerEvents(eventEmitter, components);
       components.input.focus();
       components.screen.render();
-
-      setInterval(() => {
-         const users = ['raphacapeto'];
-         eventEmitter.emit(constants.events.app.STATUS_UPDATED, users);
-         users.push('maria');
-         eventEmitter.emit(constants.events.app.STATUS_UPDATED, users);
-         users.push('troll0012_');
-         eventEmitter.emit(constants.events.app.STATUS_UPDATED, users);
-      }, 2000);
    }
 }
