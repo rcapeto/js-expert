@@ -22,7 +22,7 @@ export class TerminalController {
    #onInputRecived(eventEmitter) {
       return function() {
          const message = this.getValue();//this => component
-         console.log(message); 
+         eventEmitter.emit(constants.events.app.MESSAGE_SENT, message);
          this.clearValue(); //this => component
       }
    }

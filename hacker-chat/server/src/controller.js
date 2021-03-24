@@ -1,5 +1,8 @@
+import { constants } from "./constants.js";
+
 export class Controller {
    #users = new Map();
+   #rooms = new Map();
 
    constructor({ socketServer }) {
       this.socketServer = socketServer;
@@ -16,15 +19,65 @@ export class Controller {
       socket.on('error', this.#onSocketClosed(id));
    }
 
+   async joinRoom(socketId, data) {
+      const userData = data;
+      console.log(`${userData.userName} joined! ${[socketId]}`);
+
+      const { roomId } = userData;
+      const user = this.#updateGlobalUserData(socketId,  userData);
+      const users = this.#joinUserOnRoom(roomId, user);
+
+      const currentUsers = Array.from(users.values()).map(({ id, userName}) => ({ id, userName }));
+
+      //atualiza o usuário que conectou sobre quais usuários já estão conectados na mesma sala
+      this.socketServer.sendMessage(
+         user.socket,
+         constants.event.UPDATE_USERS,
+         currentUsers
+      );
+
+      //avisar a rede toda que um novo usuario conectou-se
+      this.broadCast({
+         socketId,
+         roomId,
+         event: constants.event.NEW_USER_CONNECTED,
+         message: { id: socketId, userName: userData.userName }
+      });
+   }
+
+   broadCast({ socketId, roomId, event, message, includeCurrentSocket = false }) {
+      const usersOnRoom = this.#rooms.get(roomId);
+
+      for(const [key, user] of usersOnRoom) {
+         if(!includeCurrentSocket && key === socketId) continue;
+
+         this.socketServer.sendMessage(user.socket, event, message);
+      }
+
+   }//mandar mensagem para todos que estão na sala
+
+   #joinUserOnRoom(roomId, user) {
+      const usersOnRoom = this.#rooms.get(roomId) ?? new Map();
+      usersOnRoom.set(user.id, user);
+      this.#rooms.set(roomId, usersOnRoom);
+      return usersOnRoom;
+   }
+
    #onSocketClosed(id) {
       return data => {
-         console.log('data', data.toString());
+         console.log('data', id);
       }
    }
 
    #onSocketData(id) {
       return data => {
-         console.log('data', data.toString());
+         try {
+            const { event, message } = JSON.parse(data);
+            //this[event] => this.joinRoom()
+            this[event](id, message);
+         } catch(err) {
+            console.error(`wrong event format!!`, data.toString());
+         } 
       }
    }
 

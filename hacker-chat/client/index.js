@@ -6,17 +6,33 @@
  * 
  */
 
-import Events from 'events';
+import Event from 'events';
 import { TerminalController } from "./src/terminalController.js";
 import { CliConfig } from './src/cliConfig.js';
 import { SocketClient } from './src/socket.js';
+import { EventManager } from './src/eventManager.js';
 
 const [nodePath, filePath, ...commands] = process.argv;
+
 const config = CliConfig.parseArguments(commands);
 console.log('config', config);
-const componentEmitter = new Events();
-const controller = new TerminalController();
+
+const componentEmitter = new Event();
+
 const socketClient = new SocketClient(config);
 await socketClient.initialize();
 
-// await controller.initializeTable(componentEmitter);
+const data = {
+   roomId: config.room,
+   userName: config.username
+}
+
+const eventManager = new EventManager({ componentEmitter, socketClient });
+
+const events = eventManager.getEvents();
+socketClient.attachEvents(events);
+
+eventManager.joinRoomAndWaitForMessages(data);
+
+const controller = new TerminalController();
+await controller.initializeTable(componentEmitter);
