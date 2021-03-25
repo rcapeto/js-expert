@@ -44,6 +44,21 @@ export class EventManager {
       this.#emitComponentUpdate(constants.events.app.ACTIVITYLOG_UPDATED, message);
    }
 
+   disconnectUser(user) {
+      const { userName, id } = user;
+      this.#allUsers.delete(id);
+      
+      this.#updateActivityLogComponent(`${userName} left!`);
+      this.#updateUsersComponent();
+   }
+
+   message(message) {
+      this.componentEmitter.emit(
+         constants.events.app.MESSAGE_RECEIVED,
+         message
+      );
+   }
+
    getEvents() {
       const functions = Reflect.ownKeys(EventManager.prototype)
          .filter(fn => fn !== 'constructor')

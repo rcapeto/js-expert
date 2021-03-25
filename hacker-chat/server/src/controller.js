@@ -63,9 +63,37 @@ export class Controller {
       return usersOnRoom;
    }
 
+   #logoutUser(id, roomId) {
+      this.#users.delete(id);
+      const userOnRoom = this.#rooms.get(roomId);
+      userOnRoom.delete(id);
+      this.#rooms.set(roomId, userOnRoom);
+   }
+
+   message(socketId, data) {
+      const { userName, roomId } = this.#users.get(socketId);
+      this.broadCast({
+         roomId,
+         socketId,
+         event: constants.event.MESSAGE,
+         message: { userName, message: data },
+         includeCurrentSocket: true
+      });
+   }
+
    #onSocketClosed(id) {
-      return data => {
-         console.log('data', id);
+      return _ => {
+         const { userName, roomId } = this.#users.get(id);
+         console.log(`${userName} disconnected!`);
+
+         this.broadCast({
+            roomId,
+            message: { id, userName },
+            socketId: id,
+            event: constants.event.DISCONNECT_USER
+         });
+
+         this.#logoutUser(id, roomId);
       }
    }
 
